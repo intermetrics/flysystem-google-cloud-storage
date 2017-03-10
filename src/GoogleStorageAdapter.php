@@ -279,7 +279,11 @@ class GoogleStorageAdapter extends AbstractAdapter
         $object = $this->getObject($path);
 
         if ($visibility === AdapterInterface::VISIBILITY_PRIVATE) {
-            $object->acl()->delete('allUsers');
+            try {
+                $object->acl()->delete('allUsers');
+            } catch (NotFoundException $e) {
+                // object may not have an acl entry, so handle that gracefully
+            }
         } elseif ($visibility === AdapterInterface::VISIBILITY_PUBLIC) {
             $object->acl()->add('allUsers', Acl::ROLE_READER);
         }
