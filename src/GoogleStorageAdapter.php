@@ -139,14 +139,6 @@ class GoogleStorageAdapter extends AbstractAdapter
     {
         $options = [];
 
-        if ($visibility = $config->get('visibility')) {
-            $options['predefinedAcl'] = $this->getPredefinedAclForVisibility($visibility);
-        } else {
-            // if a file is created without an acl, it isn't accessible via the console
-            // we therefore default to private
-            $options['predefinedAcl'] = $this->getPredefinedAclForVisibility(AdapterInterface::VISIBILITY_PRIVATE);
-        }
-
         $options['metadata'] = [];
         if ($metadata = $config->get('metadata')) {
             $options['metadata'] = $metadata;
@@ -177,6 +169,10 @@ class GoogleStorageAdapter extends AbstractAdapter
         }
 
         $object = $this->bucket->upload($contents, $options);
+
+        if ($visibility = $config->get('visibility')) {
+            $this->setVisibility($this->removePathPrefix($object->name()), $visibility);
+        }
 
         return $this->normaliseObject($object);
     }
@@ -232,9 +228,10 @@ class GoogleStorageAdapter extends AbstractAdapter
 
         $options = [
             'name' => $newpath,
-            'predefinedAcl' => $this->getPredefinedAclForVisibility($visibility),
         ];
         $this->getObject($path)->copy($this->bucket, $options);
+
+        $this->setVisibility($this->removePathPrefix($newpath), $visibility);
 
         return true;
     }
@@ -440,16 +437,6 @@ class GoogleStorageAdapter extends AbstractAdapter
     {
         $path = $this->applyPathPrefix($path);
         return $this->bucket->object($path);
-    }
-
-    /**
-     * @param string $visibility
-     *
-     * @return string
-     */
-    protected function getPredefinedAclForVisibility($visibility)
-    {
-        return $visibility === AdapterInterface::VISIBILITY_PUBLIC ? 'publicRead' : 'projectPrivate';
     }
 
     /**
