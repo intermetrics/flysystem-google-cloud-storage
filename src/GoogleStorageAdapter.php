@@ -147,6 +147,7 @@ class GoogleStorageAdapter extends AbstractAdapter
             $options['predefinedAcl'] = $this->getPredefinedAclForVisibility(AdapterInterface::VISIBILITY_PRIVATE);
         }
 
+        $options['metadata'] = [];
         if ($metadata = $config->get('metadata')) {
             $options['metadata'] = $metadata;
         }
@@ -169,6 +170,11 @@ class GoogleStorageAdapter extends AbstractAdapter
 
         $options = $this->getOptionsFromConfig($config);
         $options['name'] = $path;
+
+        if (($compression = $config->get('compression')) && $compression !== 'identity') {
+            $contents = $this->compress($contents, $compression);
+            $options['metadata']['contentEncoding'] = $compression;
+        }
 
         $object = $this->bucket->upload($contents, $options);
 
@@ -444,5 +450,26 @@ class GoogleStorageAdapter extends AbstractAdapter
     protected function getPredefinedAclForVisibility($visibility)
     {
         return $visibility === AdapterInterface::VISIBILITY_PUBLIC ? 'publicRead' : 'projectPrivate';
+    }
+
+    /**
+     * Compresses the given string using the specified compression method and returns the result.
+     *
+     * @param string $contents
+     * @param string $compressionMethod
+     *
+     * @return string
+     */
+    protected function compress($contents, $compressionMethod)
+    {
+        // GCS supports only gzip at this time
+        $methodToZlibEncoding = [
+            'gzip'      => ZLIB_ENCODING_GZIP,
+        ];
+
+        if (!isset($methodToZlibEncoding[$compressionMethod]))
+            throw new \InvalidArgumentException(sprintf('Unsupported compression method: %s', $compressionMethod));
+
+        return zlib_encode($contents, $methodToZlibEncoding[$compressionMethod]);
     }
 }
