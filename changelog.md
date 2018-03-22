@@ -1,6 +1,18 @@
 # Changelog
 
-## 5.0.0 - ?
+## 5.0.3 - 2017-07-18
+
+* Allow for google/cloud ^0.31.0|^0.32.0|^0.33.0|^0.34.0|^0.35.0
+
+## 5.0.2 - 2017-07-04
+
+* Fix broken move/rename operations (@maksimru)
+
+## 5.0.1 - 2017-05-19
+
+* Allow for google/cloud ^0.22.0|^0.23.0|^0.24.0|^0.25.0|^0.26.0|^0.27.0|^0.28.0|^0.29.0|^0.30.0
+
+## 5.0.0 - 2017-04-03
 
 * Fix to readStream incorrectly returning a `StreamInterface` instead of a `resource` (@andris-sevcenko)
 
